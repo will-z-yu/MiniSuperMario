@@ -13,6 +13,8 @@ import com.example.android.minisupermario.R;
 import com.example.android.minisupermario.controller.PlayerController;
 import com.example.android.minisupermario.model.Player;
 
+import static android.view.MotionEvent.ACTION_DOWN;
+
 public class GameView extends SurfaceView implements SurfaceHolder.Callback{
     /*Fields*/
     //"Resolution" of the game
@@ -59,14 +61,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         clickY = (int) event.getY();
 
         //Left
-        if(     0 < clickX && clickX < columnWidth &&
+        if(     event.getAction() == ACTION_DOWN &&
+                0 < clickX && clickX < columnWidth &&
                 rowHeight * (vertnum - 1) < clickY && clickY < height){
+            System.out.println("clicked left!");
             player1.moveLeft(columnWidth/maxMoveCount);
         }
 
         //Right
-        if (columnWidth < clickX && clickX < 2 * columnWidth && clickY > rowHeight * (vertnum - 1) && clickY < height) {
-            playerController.moveRight(columnwidth / 6, width - columnwidth, horinum * 3 - 1);
+        if (    event.getAction() == ACTION_DOWN &&
+                columnWidth < clickX && clickX < 2 * columnWidth &&
+                rowHeight * (vertnum - 1) < clickY && clickY < height) {
+            System.out.println("clicked right!");
+            player1.moveRight(columnWidth/maxMoveCount);
         }
 
         //Attack
@@ -255,5 +262,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback{
         int y = player.getyPosPixel();
         rect.set(x, y, x + columnWidth, y + rowHeight);
         canvas.drawBitmap(playerSprite[player.getSprite()], null, rect, null);
+        invalidate();
     }
 }
