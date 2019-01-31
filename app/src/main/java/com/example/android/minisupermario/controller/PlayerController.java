@@ -22,7 +22,7 @@ public class PlayerController {
 
     }
 
-    public void moveRight(int pixels){
+    public void moveRight(){
 
     }
 
