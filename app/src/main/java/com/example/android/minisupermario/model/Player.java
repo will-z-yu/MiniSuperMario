@@ -2,8 +2,8 @@ package com.example.android.minisupermario.model;
 
 public class Player {
     /*Fields*/
-    final static int LEFT = 1;
-    final static int RIGHT = 2;
+    private final static int LEFT = 1;
+    private final static int RIGHT = 2;
 
     //States
     private boolean reset;
@@ -18,6 +18,7 @@ public class Player {
     private int lives;
     private int direction;
     private int sprite;
+
 
     private int xPos;
     private int yPos;
