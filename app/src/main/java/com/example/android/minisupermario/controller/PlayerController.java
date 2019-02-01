@@ -14,6 +14,15 @@ public class PlayerController {
     }
 
     /*Methods*/
+    //Initialize Mario states
+    public void initializeMario(int xPosPixel, int yPosPixel){
+        if(!player.reset()){
+            player.setxPosPixel(xPosPixel);
+            player.setyPosPixel(yPosPixel);
+            player.setReset(true);
+        }
+    }
+
     public void idle(){
 
     }

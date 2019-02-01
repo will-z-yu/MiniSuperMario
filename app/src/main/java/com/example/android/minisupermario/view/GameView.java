@@ -16,6 +16,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.example.android.minisupermario.R;
+import com.example.android.minisupermario.controller.HUDController;
 import com.example.android.minisupermario.controller.PlayerController;
 import com.example.android.minisupermario.model.Player;
 
@@ -43,7 +44,7 @@ public class GameView extends SurfaceView implements Runnable{
     //Bitmaps
     private Bitmap background[];
     private Bitmap foreground[];
-    private Bitmap buttons[];
+    private Bitmap hudBitmap[];
     private Bitmap objects[];
     private Bitmap playerSprite[];
 
@@ -59,31 +60,40 @@ public class GameView extends SurfaceView implements Runnable{
     private Player mario;
     private PlayerController player1;
 
+    //HUD
+    private HUDController hudController;
+
     /*Constructor*/
-    public GameView (Context context) {
+    public GameView (Context context, int screenWidth, int screenHeight) {
         super(context);
         setFocusable(true);
         setWillNotDraw(false);
 
-        getScreenDimensions(context);
+        //Set resolution
+        this.screenWidth = screenWidth;
+        this.screenHeight = screenHeight;
+        columnWidth = screenWidth/horinum;
+        rowHeight = screenHeight/vertnum;
 
         //Instantiate
-        holder = getHolder();
-
         background = new Bitmap[3];
         foreground = new Bitmap[2];
-        buttons = new Bitmap[4];
+        hudBitmap = new Bitmap[4];
         objects = new Bitmap[3];
         playerSprite = new Bitmap[48];
 
         initializeBitmaps();
 
+        //For Drawing
+        holder = getHolder();
         rect = new Rect();
         paint = new Paint();
 
-
+        //Game Objects
         mario = new Player(29,4);
         player1 = new PlayerController(mario);
+
+        hudController = new HUDController(screenWidth, screenHeight);
     }
 
     /*Methods*/
@@ -109,29 +119,8 @@ public class GameView extends SurfaceView implements Runnable{
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        int clickX;
-        int clickY;
-        clickX = (int) event.getX();
-        clickY = (int) event.getY();
 
-        //Left
-        if(     event.getAction() == ACTION_DOWN &&
-                0 < clickX && clickX < columnWidth &&
-                rowHeight * (vertnum - 1) < clickY && clickY < screenHeight){
-            System.out.println("clicked left!");
-        }
-
-        //Right
-        if (    event.getAction() == ACTION_DOWN &&
-                columnWidth < clickX && clickX < 2 * columnWidth &&
-                rowHeight * (vertnum - 1) < clickY && clickY < screenHeight) {
-            System.out.println("clicked right!");
-        }
-
-        //Attack
-
-        //Jump
-
+        hudController.handleInput(event);
 
         invalidate();
         return true;
@@ -169,13 +158,10 @@ public class GameView extends SurfaceView implements Runnable{
 
             //Draw here
             //Set Mario's initial (x,y)
-            initializeMario();
+            player1.initializeMario((horinum - 1) * columnWidth,(vertnum - 2) * rowHeight);
 
             //Background
             drawBackground(canvas);
-
-            //Buttons
-            drawButtons(canvas);
 
             //Player
             drawPlayer(canvas, mario);
@@ -185,28 +171,11 @@ public class GameView extends SurfaceView implements Runnable{
             paint.setTextSize(45);
             canvas.drawText("FPS:" + fps, 20, 40, paint);
 
+            //HUD
+            hudController.drawHUD(canvas, hudBitmap);
+
             //Unlock canvas
             holder.unlockCanvasAndPost(canvas);
-        }
-    }
-
-    private void getScreenDimensions(Context context){
-        Display display = ((Activity)context).getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-
-        //Get screen width and height in order to draw properly
-        screenWidth = size.x;
-        screenHeight = size.y;
-        columnWidth = screenWidth/horinum;
-        rowHeight = screenHeight/vertnum;
-    }
-
-    private void initializeMario(){
-        if(!mario.reset()){
-            mario.setxPosPixel((horinum - 1) * columnWidth);
-            mario.setyPosPixel((vertnum - 2) * rowHeight);
-            mario.setReset(true);
         }
     }
 
@@ -214,22 +183,6 @@ public class GameView extends SurfaceView implements Runnable{
     private void drawBackground(Canvas canvas){
         rect.set(0, 0, screenWidth, screenHeight);
         canvas.drawBitmap(background[0], null, rect, null);
-    }
-
-    //Draw Buttons
-    private void drawButtons(Canvas canvas){
-        //left
-        rect.set(0, (vertnum - 1) * rowHeight, columnWidth, screenHeight);
-        canvas.drawBitmap(buttons[0], null, rect, null);
-        //right
-        rect.set(columnWidth, (vertnum - 1) * rowHeight, 2 * columnWidth, screenHeight);
-        canvas.drawBitmap(buttons[1], null, rect, null);
-        //a (attack)
-        rect.set((horinum - 2) * columnWidth, (vertnum - 1) * rowHeight, (horinum - 1) * columnWidth, screenHeight);
-        canvas.drawBitmap(buttons[2], null, rect, null);
-        //b (jump)
-        rect.set((horinum - 1) * columnWidth, (vertnum - 1) * rowHeight, horinum * columnWidth, screenHeight);
-        canvas.drawBitmap(buttons[3], null, rect, null);
     }
 
     //Draw Player
@@ -240,6 +193,7 @@ public class GameView extends SurfaceView implements Runnable{
         canvas.drawBitmap(playerSprite[player.getSprite()], null, rect, null);
     }
 
+    //Assigns Bitmap objects to Bitmap[]
     private void initializeBitmaps(){
         //Background
         background[0] = makeBitmap(R.drawable.background_default);
@@ -251,10 +205,10 @@ public class GameView extends SurfaceView implements Runnable{
         foreground[1] = makeBitmap(R.drawable.game_over);
 
         //Buttons
-        buttons[0] = makeBitmap(R.drawable.button_left);
-        buttons[1] = makeBitmap(R.drawable.button_right);
-        buttons[2] = makeBitmap(R.drawable.button_a);
-        buttons[3] = makeBitmap(R.drawable.button_b);
+        hudBitmap[0] = makeBitmap(R.drawable.button_left);
+        hudBitmap[1] = makeBitmap(R.drawable.button_right);
+        hudBitmap[2] = makeBitmap(R.drawable.button_a);
+        hudBitmap[3] = makeBitmap(R.drawable.button_b);
 
         //Objects
         objects[0] = makeBitmap(R.drawable.object_brick);
